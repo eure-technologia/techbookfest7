@@ -2,9 +2,13 @@ PREDEF:
   - preface.re
 
 CHAPS:
-  - article.re
+  - boxp.re
+  - yusuke.re
+  - marnie.re
+  - kaneshin.re
 
 APPENDIX:
 
 POSTDEF:
   - contributors.re
+  - postfix.re
