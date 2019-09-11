@@ -16,29 +16,21 @@ WAF(ウェブアプリケーションファイアーウォール)はL7(アプリ
 
 AWS WAFはCondition（検知条件）とRule（検知したものをどうするか？)の二つの要素で構成されており、
 まずHTTPヘッダやURI、ペイロード、IPアドレス等のリクエストの情報の条件をConditionに定義し、
-単数〜複数のConditionに対してRule(BLOCK or COUNT)を設定することで攻撃と思われる条件にあったリクエストに対して防御をする仕組みです。
+単数〜複数のConditionに対してRule(BLOCK,ALLOW,COUNT)を設定することで攻撃と思われる条件にあったリクエストに対して防御をする仕組みです。
 
 AWSWAFのRuleとConditionはデフォルトでは空になっていますので、自前でのルール構築ないし、
-マーケットプレイスでセキュリティベンダーが提供するマネージドルールを購入して適用などを行なって
+マーケットプレイスでセキュリティベンダーが提供するマネージドルール@<fn>{managed_rules}を購入して適用などを行なって
 セキュリティ対策をしていく事になります。
 
 * 今回の記事ではAWS WAFのログを可視化にする仕組みを構築する事が主題となりますので、
 詳細なルール構築などについては割愛しています。
 
-TODO: マネージドルールの購入URLなど
+//footnote[managed_rules] [https://aws.amazon.com/marketplace/search/results?x=0&y=0&searchTerms=waf]
 
 == WAFログの分析基盤を作ってみよう。
 
 AWS WAFは標準でCloudWatchと連携していますので、どのルールがどのくらい発生したかというようなメトリクス@<fn>{metrics}を導入後とくに設定などを行わなくてもcloudWatchでメトリクスを確認する事が
-できますが、
-//footnote[metrics] [https://docs.aws.amazon.com/ja_jp/waf/latest/developerguide/monitoring-cloudwatch.html]
-
-AWS WAFは経由する全てのリクエストに対して、条件に一致さえすれば
-実際に攻撃リクエストだったかどうかはお構いなくアクションを執行しますので、
-条件設定の不備やアプリケーションの作りによっては、攻撃ではない正常なリクエスト
-についても遮断してしまいます。
-
-このような誤検知の検知や意図した通りに攻撃に対して守備できているか？等を日々チューニング・把握しておく必要がある
+できますが、誤検知の検知/調査、意図した通りに攻撃に対して守備できているか？等を日々チューニング・把握しておく必要がある
 となってくると、より詳細なログを抽出したり、データを可視化したり、分析してみたくなったりしますよね。(きっと)
 
 AWS WAFのログはKinesisFirehoseをアウトプット先にできますので、firehoseがサポートしているsplunk,Redshiftには
@@ -47,6 +39,8 @@ AWS WAFのログはKinesisFirehoseをアウトプット先にできますので�
 ただRedshiftの運用まではしたくないんだよなぁとか、まだSIEMは検討フェーズ、と言うケースもあると思いますので、
 今回は、もう少し気楽にサーバーレスなクエリ実行基盤であるAthenaとS3をベースにしたAWS WAFログ
 を抽出・可視化できるような分析基盤を構築していこうと思います。
+
+//footnote[metrics] [https://docs.aws.amazon.com/ja_jp/waf/latest/developerguide/monitoring-cloudwatch.html]
 
 === 分析基盤は後からでも作れるので、まずは保管からだけでも?
 
@@ -211,7 +205,8 @@ resource "aws_kinesis_firehose_delivery_stream" "sample_aws_waf_log" {
 
 この状態でWAFをかぶせたALB向けに通信を行うと、以下のようにs3にログが自動で作成されていきます。
 
-TODO: がぞうをのせる
+//image[s3_save][]{
+//}
 
 == Optional:データを変換してs3に保存する
 
