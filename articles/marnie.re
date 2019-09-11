@@ -56,7 +56,7 @@ S3 Selectでのファイル内走査も可能になりますし、s3に保管さ
 //image[overview][]{
 //}
 
-=== 費用に注意...
+=== 従量課金なので費用にご注意...
 
 次節から紹介する構成はs3,kinesis firehose,lambda,などなどログの流量に依存した
 従量課金が発生しますので、流量が多いサービスで試す際は
@@ -294,11 +294,48 @@ TODO: hive形式についてレコメンドだけしておく
 == ログの可視化
 
 前節でSQLを利用したログの集計・抽出といった分析が可能となりました。
-ちょっとした分析用途だけならこれで充分と言えば充分ですが、折角なのでquicksightを使った
-グラフ化もしてみましょう。
+ちょっとした分析用途だけならこれで充分と言えば充分ですが、折角なので、同じAWSのサービスである
+quicksightを使って簡単なグラフ化をしてみましょう。
 
-TODO:quicksightでのログ可視化手順をさくっと。リクエスト分布でも出せばいいかな
+注記:quicksightは月額課金が発生しますので、価格体系@<fn>{quicksight_cost}を確認の上お試しください。
 
+//footnote[quicksight_cost][https://aws.amazon.com/jp/quicksight/pricing/]
+
+* Quicksightを開く
+* 新しい分析を選択
+* 新しいデータセットを選択
+* データソースにAthenaを選択
+
+//image[quicksight_1][]{
+//}
+
+* 適当な名前をつけて作成
+
+//image[quicksight_2][]{
+//}
+
+* 分析したいAthenaのテーブルを選択し、カスタムSQLを使用をクリック
+
+//image[quicksight_3][]{
+//}
+
+* 例として国別にリクエストの集計を取る簡単なSQLを入力し、クエリの確認をクリック
+
+//image[quicksight_4][]{
+//}
+
+* データセットの作成が完了しました。
+
+//image[quicksight_5][]{
+//}
+
+* Visualizeを選択して、画面左から円グラフを選択。フィールドウェルのグループにcountry、値にcountをドラッグします。
+
+//image[quicksight_6][]{
+//}
+
+無事円グラフ化ができました。
+ここから先はquicksightの使い方になってしまうので割愛しますが、同じような手順でクエリをvisualize化できます
 蛇足ですが、外部サービスであるRedashもBackend DataSourceとしてAthenaを指定可能ですので、
 既にRedash運用があるようなら、そちらを使って見るのもよいかなと思います。
 
