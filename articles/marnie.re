@@ -37,8 +37,8 @@ AWS WAFのログはKinesisFirehoseをアウトプット先にできますので�
 容易にデータを流し込むことができますので、既にそういったサービスを使っているなら、そちらに集約してしまうという
 選択肢もあります。
 ただRedshiftの運用まではしたくないんだよなぁとか、まだSIEMは検討フェーズ、と言うケースもあると思いますので、
-今回は、もう少し気楽にサーバーレスなクエリ実行基盤であるAthenaとS3をベースにしたAWS WAFログ
-を抽出・可視化できるような分析基盤を構築していこうと思います。
+今回は、もう少し気楽に、従量課金+サーバーレスなSQL実行基盤であるAthenaとS3をベースにしたAWS WAFログ
+を抽出・可視化できる分析基盤を構築していこうと思います。
 
 //footnote[metrics] [https://docs.aws.amazon.com/ja_jp/waf/latest/developerguide/monitoring-cloudwatch.html]
 
@@ -75,12 +75,12 @@ S3 Selectでのファイル内走査も可能になりますし、s3に保管さ
 1. AWS WAFの標準機能(要設定)でfirehoseにデータを出力
 2. firehoseからs3にデータを転送(データ変換をする場合はlambdaに転送)
 3. GlueCrawlerから対象s3Bucketを定期的にクロールしてAthenaで使うGlue データカタログを作成/更新
-4. QuickSightで可視化
+4. AthenaでSQL実行 & QuickSightで可視化
 
-customLog保管側のデータ欠損・トラブルに対しての保険としてoriginalログをs3に保管していますが
-この辺はお好みで。
+図上は省略していますが、lambdaのエラーによるデータ欠損・その他障害に対しての保険として
+originalログをs3に保管しても良いと思います。(お好みで)
 
-次節から各ステップの設定方法を順次説明していきます。
+次節からは各ステップの設定方法を順次説明していきます。
 
 == AWS WAFのログをfirehose経由でs3に保管する
 
@@ -88,13 +88,14 @@ customLog保管側のデータ欠損・トラブルに対しての保険とし�
 AWS WAFログはWAFを経由した全てのログをKinesis Firehoseを経由して
 S3に吐き出す事が可能ですので、まずはログの保管の設定を行います。
 
-GUIから設定する場合は
+1. ログ保存用のS3BucketとkinesisFirehoseに処理用のストリームをあらかじめ作成します。
 
-* ログ保存用のS3BucketとkinesisFirehoseに処理用のストリームをあらかじめ作成。
-* AWS WAFのページからログを吐き出したいACLを選択。
-* Loggingのタブから処理を行うKinesisFirehoseを紐づける。
+2. AWS WAFのページからログを吐き出したいACLを選択。
 
-という操作で設定が可能です。
+3. Loggingのタブから処理を行うKinesisFirehoseを紐づける。
+
+TODO:画像載せる?めんどくない?
+
 以下はterraformで定義する場合のサンプルコードとなります。
 
 //listnum[][terraformによるAWS WAFとログの吐き出しのサンプル][java]{
@@ -172,7 +173,7 @@ resource "aws_s3_bucket_policy" "waf_log_bucket_policy" {
                 "AWS": "arn:aws:iam::********:role/waf_log_firehose"
             },
             "Action": "s3:*",
-            "Resource": "arn:aws:s3:::/*" //TODO:さすがに*は恥ずかしい
+            "Resource": "arn:aws:s3:::/*"
         }
     ]
 }
@@ -210,7 +211,7 @@ resource "aws_kinesis_firehose_delivery_stream" "sample_aws_waf_log" {
 
 == Optional:データを変換してs3に保存する
 
-lambdaでsourceIP吐き出すとか、もろもろ。
+TODO:lambdaでsourceIP吐き出すとか、もろもろ。
 
 ==  GlueCrawlerでAthenaで使うGlue データカタログを自動で作成/更新する
 
@@ -221,34 +222,42 @@ Glue Crawlerはs3 Bucketを指定するだけでS3内部のデータとディレ
 
 === GlueCrawler用のIAM設定
 
+GlueCrawalerの実行に使用するIAMRoleを作成します。
+TODO: 説明
+TODO: 画像
+
 === GlueCrawlerの設定
 
+TODO: 説明
+TODO: 画像
 
 === terraformレシピ（参考)
 
-今回行った設定をterraformで表現する場合は以下のような構文になります。
+terraformで設定する場合は以下の通りです。
 
 TODO: terraform
 
-
-=== 手動で実行
+=== Glue Crawlerの実行
 
 一旦、手動で実行してテーブルを作成しましょう。
 スケジュール実行の頻度については、お金と必要な鮮度・更新頻度からお好みが良いかと思います。
 
-テーブルが作成されました。
+//image[exec_crawler][]{
+//}
 
-TODO: 画像
+しばらく待つとテーブルが作成されます。
 
+//image[glue_table][]{
+//}
 
 hive形式にふれるか、partitionの話とかかな。
 
 === Athenaでクエリを発行しよう！
 
-Athenaでクエリを実行できる準備が整いましたので、クエリを打ってみましょう！
-こんな形でAWS Console上からクエリを打つ事ができます。
+Athenaでクエリを実行できる準備が整いましたので、簡単なクエリを打ってみましょう！
+こんな形でAWS Console上からクエリを発行することができます。
 
-//image[overview][]{
+//image[athena][]{
 //}
 
 Athenaを利用する際の注意として、パーティションを指定しない場合、
@@ -257,29 +266,24 @@ s3上の全データの捜査になる為、コストアップ&検索速度が�
 クエリの活用例などについてもAWS公式@<fn>{sample_queries}に例がありますので、こちらも参考までに
 確認してみてください :)
 
-//footnote[metrics] [https://docs.aws.amazon.com/ja_jp/athena/latest/ug/waf-logs.html]
+//footnote[sample_queries] [https://docs.aws.amazon.com/ja_jp/athena/latest/ug/waf-logs.html]
 
 TODO: hive形式についてレコメンドだけしておく
-
 
 == ログの可視化
 
 前節でSQLを利用したログの集計・抽出といった分析が可能となりました。
 ちょっとした分析用途だけならこれで充分と言えば充分ですが、折角なので
-グラフ化もしてみましょう！
+グラフ化もしてみましょう。
 
 quicksightとかログの投げ方とかを書く
 
-AWSにおけるAthenaの説明いれる？
-パーティションしないとathenaが遅い+高い
-
 蛇足ですが、外部サービスであるRedashもBackend DataSourceとしてAthenaを指定可能ですので、
-既にRedash運用があるようなら、そちらを使って見るのもよいかなと
-思います。
+既にRedash運用があるようなら、そちらを使って見るのもよいかなと思います。
 
 == アラーティングに活用してみよう。
 
-TODO: cloudwatchで楽できないの？とかlambdaでやる？とか
+TODO: cloudwatchで楽できないの？とかlambdaでやる？とか (時間がなかったらこの項目自体消す)
 
 == まとめ
 
@@ -287,4 +291,3 @@ AWS WAFとAWSコンポーネントの連携でログの抽出、可視化する�
 分析と可視化をどのレベルまで実現するかは、あくまで実運用とセットだと思いますが
 まずはログを保管して、有事に見える状態を整えておく・手段として持っておくだけでもだいぶ安心感が出るかな〜と思いますので
 ぜひ試してみてください！
-
