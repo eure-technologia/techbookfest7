@@ -235,7 +235,28 @@ TODO: 画像
 
 terraformで設定する場合は以下の通りです。
 
-TODO: terraform
+//listnum[][terraformでのGlue設定サンプル][java]{
+```
+resource "aws_glue_catalog_database" "waf_log" {
+  name         = "sample-waflog-db"
+}
+
+resource "aws_glue_crawler" "waf_log_crawler" {
+  database_name = "${aws_glue_catalog_database.waf_log.name}"
+  name = "waf-log-crawler"
+  role          = "TODO:IAM"
+  schedule = "cron( * 12 * * ? *)"
+  schema_change_policy = {
+   delete_behavior = "DELETE_FROM_DATABASE"
+  }
+  s3_target {
+    path = "s3://${aws_s3_bucket.waf_log_bucket.bucket}" #ログ保管先のbucketを指定 
+  }
+}
+
+TODO:IAM
+
+}//
 
 === Glue Crawlerの実行
 
@@ -273,10 +294,10 @@ TODO: hive形式についてレコメンドだけしておく
 == ログの可視化
 
 前節でSQLを利用したログの集計・抽出といった分析が可能となりました。
-ちょっとした分析用途だけならこれで充分と言えば充分ですが、折角なので
+ちょっとした分析用途だけならこれで充分と言えば充分ですが、折角なのでquicksightを使った
 グラフ化もしてみましょう。
 
-quicksightとかログの投げ方とかを書く
+TODO:quicksightでのログ可視化手順をさくっと。リクエスト分布でも出せばいいかな
 
 蛇足ですが、外部サービスであるRedashもBackend DataSourceとしてAthenaを指定可能ですので、
 既にRedash運用があるようなら、そちらを使って見るのもよいかなと思います。
