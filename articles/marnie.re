@@ -1,10 +1,10 @@
-= S3 + Athena + GlueCrawler を使ってAWS WAFのログの分析基盤の構築しよう!
+= S3 + Athena + GlueCrawler を使ってAWS WAFのログ分析基盤を構築しよう!
 
 == 自己紹介
 
 こんにちは、SREチームでエンジニアをしている@marnie0301です。
 最近はAWS WAFをさわさわする事が多かったので、
-今回は、AWS WAFのログの可視化、アラート連携について書いていきたいなと思います。
+今回は、AWS WAFのログの可視化/分析基盤の構築について書いていきたいなと思います。
 
 == AWS WAFとは?
 
@@ -88,17 +88,38 @@ originalログをs3に保管しても良いと思います。(お好みで)
 AWS WAFログはWAFを経由した全てのログをKinesis Firehoseを経由して
 S3に吐き出す事が可能ですので、まずはログの保管の設定を行います。
 
-1. ログ保存用のS3BucketとkinesisFirehoseに処理用のストリームをあらかじめ作成します。
+=== 1. ログ保存用のS3BucketとkinesisFirehoseに処理用のストリームをあらかじめ作成します。
 
-2. AWS WAFのページからログを吐き出したいACLを選択。
+TODO:IAMの設定について注釈を入れる。
 
-3. Loggingのタブから処理を行うKinesisFirehoseを紐づける。
+注意として、AWS WAFのログ出力先はaws-waf-logsから始まる名前である必要がありますので、
+その制限に沿って命名してください。
 
-TODO:画像載せる?めんどくない?
+=== 2. AWS WAFのページからログを吐き出したいACLを選択し、LoggingのタブからEnableLoggingをクリック
+
+* 作成したKinesis firehose を選択してください。
+* ログ保存時にマスクするデータを選択可能なので、マスクしたい情報を追加します。
+
+//image[kinesis_2][]{
+//}
+
+=== 3. Loggingのタブから処理を行うKinesisFirehoseを紐づける。
+
+//image[kinesis_3][]{
+//}
+
+=== 4. 完成!
+
+この状態でWAFをかぶせたALB向けに通信を行うと、以下のようにs3にログが自動で作成されていきます。
+
+//image[s3_save][]{
+//}
+
+=== 5. terraformでの設定サンプル
 
 以下はterraformで定義する場合のサンプルコードとなります。
 
-//listnum[][terraformによるAWS WAFとログの吐き出しのサンプル][java]{
+//listnum[][terraformによるAWS WAFとログ出力〜保存のサンプル][java]{
 ```
 ## waf config
 resource "aws_wafregional_web_acl" "sample_alb_acl" {
@@ -204,11 +225,6 @@ resource "aws_kinesis_firehose_delivery_stream" "sample_aws_waf_log" {
 
 //}
 
-この状態でWAFをかぶせたALB向けに通信を行うと、以下のようにs3にログが自動で作成されていきます。
-
-//image[s3_save][]{
-//}
-
 == Optional:データを変換してs3に保存する
 
 TODO:lambdaでsourceIP吐き出すとか、もろもろ。
@@ -220,16 +236,20 @@ Glue Crawlerを使ってGlue Data Catalogを生成します。
 Glue Crawlerはs3 Bucketを指定するだけでS3内部のデータとディレクトリ構造から
 自動でテーブルの作成やパーティションの自動更新などを行ってくれます。
 
-=== GlueCrawler用のIAM設定
-
-GlueCrawalerの実行に使用するIAMRoleを作成します。
-TODO: 説明
-TODO: 画像
-
 === GlueCrawlerの設定
 
-TODO: 説明
-TODO: 画像
+AWSコンソール上でクローラを追加します。
+
+* クローラ一覧からクローラを追加を選択
+* クローラの名前を入力
+* Data storesを選択
+* S3を選択し、AWS WAF のログが格納されているs3パスを入力
+* 別のデータストアの追加にいいえを選択
+* IAMを作成を選択し名前を入力。
+* オンデマンドで実行を選択
+* 出力先のデータソースを入力、設定オプションで新規列のみ追加、データカタログからテーブルとパーティションを削除、を選択。
+
+以上でクローラーが作成されます。
 
 === terraformレシピ（参考)
 
@@ -244,7 +264,7 @@ resource "aws_glue_catalog_database" "waf_log" {
 resource "aws_glue_crawler" "waf_log_crawler" {
   database_name = "${aws_glue_catalog_database.waf_log.name}"
   name = "waf-log-crawler"
-  role          = "TODO:IAM"
+  role          = "${aws_iam_role.glue_role.arn}"
   schedule = "cron( * 12 * * ? *)"
   schema_change_policy = {
    delete_behavior = "DELETE_FROM_DATABASE"
@@ -254,7 +274,36 @@ resource "aws_glue_crawler" "waf_log_crawler" {
   }
 }
 
-TODO:IAM
+resource "aws_iam_policy" "waf_log_s3_access" {
+  name ="waf_log_s3_access"
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::sample-waf-log/*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "glue_crawler_access" {
+  role       = "${aws_iam_role.glue_role.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+}
+
+resource "aws_iam_role_policy_attachment" "glue_waf_log_s3_access" {
+  role       = "${aws_iam_role.glue_role.name}"
+  policy_arn = "${aws_iam_policy.waf_log_s3_access.arn}"
+}
 
 }//
 
@@ -288,8 +337,6 @@ s3上の全データの捜査になる為、コストアップ&検索速度が�
 確認してみてください :)
 
 //footnote[sample_queries] [https://docs.aws.amazon.com/ja_jp/athena/latest/ug/waf-logs.html]
-
-TODO: hive形式についてレコメンドだけしておく
 
 == ログの可視化
 
@@ -338,10 +385,6 @@ quicksightを使って簡単なグラフ化をしてみましょう。
 ここから先はquicksightの使い方になってしまうので割愛しますが、同じような手順でクエリをvisualize化できます
 蛇足ですが、外部サービスであるRedashもBackend DataSourceとしてAthenaを指定可能ですので、
 既にRedash運用があるようなら、そちらを使って見るのもよいかなと思います。
-
-== アラーティングに活用してみよう。
-
-TODO: cloudwatchで楽できないの？とかlambdaでやる？とか (時間がなかったらこの項目自体消す)
 
 == まとめ
 
