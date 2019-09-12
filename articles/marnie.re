@@ -90,10 +90,16 @@ S3に吐き出す事が可能ですので、まずはログの保管の設定を
 
 === 1. ログ保存用のS3BucketとkinesisFirehoseに処理用のストリームをあらかじめ作成します。
 
-TODO:IAMの設定について注釈を入れる。
 
-注意として、AWS WAFのログ出力先はaws-waf-logsから始まる名前である必要がありますので、
-その制限に沿って命名してください。
+* 保存用のbucketの作成
+* データ出力用のストリームを作成します。コンソールからKinesisの画面を開き、DataFirehoseの一覧画面からCreate delivery streamを選択します。
+* 名前を入力して、次の画面に進んでください。(注意として、AWS WAFのログ出力先となるストリームはaws-waf-logsから始まる名前である必要があります)
+* Process recordsはlambdaの使用やformatを変更しない場合特に設定不要なので、そのまま進みます。
+* 作成したsa3Bucketをdestinationに入力し次の画面に進みます。
+* compressionにGZIPを選択しIAM roleの項目にあるCreate new or chooseからIAMロール作成画面に進みIAMロールを作成します。
+* review画面で設定内容を確認し、作成を完了します。
+
+上記で設定が完了します。
 
 === 2. AWS WAFのページからログを吐き出したいACLを選択し、LoggingのタブからEnableLoggingをクリック
 
@@ -174,35 +180,38 @@ resource "aws_iam_role" "waf_log_firehose" {
 EOF
 }
 
-## log bucket
-resource "aws_s3_bucket" "sample_waf_log_bucket" {
-  bucket = "sample-waf-log"
-  acl    = "private"
+resource "aws_iam_role_policy_attachment" "firehose_waf_log_s3_access" {
+  role       = "${aws_iam_role.waf_log_firehose.name}"
+  policy_arn = "${aws_iam_policy.waf_log_s3_access.arn}"
 }
 
-resource "aws_s3_bucket_policy" "waf_log_bucket_policy" {
-  bucket = "${aws_s3_bucket.sample_waf_log_bucket.id}"
+resource "aws_iam_policy" "waf_log_s3_access" {
+  name = "waf_log_s3_access"
 
-  policy = <<POLICY
+  policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "AddPerm",
             "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::********:role/waf_log_firehose"
-            },
-            "Action": "s3:*",
-            "Resource": "arn:aws:s3:::/*"
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::sample-waf-log/*"
+            ]
         }
     ]
 }
-POLICY
-  depends_on = [
-    "aws_s3_bucket.sample_waf_log_bucket",
-    "aws_iam_role.waf_log_firehose",
-  ]
+EOF
+}
+
+
+## log bucket
+resource "aws_s3_bucket" "sample_waf_log_bucket" {
+  bucket = "sample-waf-log"
+  acl    = "private"
 }
 
 ## firehose config
@@ -319,8 +328,6 @@ resource "aws_iam_role_policy_attachment" "glue_waf_log_s3_access" {
 
 //image[glue_table][]{
 //}
-
-hive形式にふれるか、partitionの話とかかな。
 
 === Athenaでクエリを発行しよう！
 
