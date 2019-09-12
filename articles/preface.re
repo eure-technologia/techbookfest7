@@ -1,14 +1,10 @@
 = はじめに
 
 == 本書の内容について
- * PairsがなぜGoを採用したのか
- * PairsのWebAPIについて
- * リファクタリングの取り組み
- * Elasticsearchを使った検索システム
- * エウレカのWebフロントエンドを支える（予定の）技術
- * Redux for Android
- * Amazon ECS と AWSFargate を利用したコンテナベースのインフラストラクチャ
- * 動作可能なプッシュ通知のドキュメントを作った話
+ * boxp.
+ * kaneshin.
+ * yusukeusui.
+ * S3 + Athena + GlueCrawler を使ってAWS WAFのログ分析基盤を構築しよう!
 
 == エウレ・テクノロギアとは
 //footnote[株式会社エウレカ][株式会社エウレカ https://eure.jp/]
