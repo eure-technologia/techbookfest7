@@ -25,7 +25,7 @@ AWSWAFのRuleとConditionはデフォルトでは空になっていますので�
 * 今回の記事ではAWS WAFのログを可視化にする仕組みを構築する事が主題となりますので、
 詳細なルール構築などについては割愛しています。
 
-//footnote[managed_rules] [https://aws.amazon.com/marketplace/search/results?x=0&y=0&searchTerms=waf]
+//footnote[managed_rules][https://aws.amazon.com/marketplace/search/results?x=0&y=0&searchTerms=waf]
 
 == WAFログの分析基盤を作ってみよう。
 
@@ -40,7 +40,7 @@ AWS WAFのログはKinesisFirehoseをアウトプット先にできますので�
 今回は、もう少し気楽に、従量課金+サーバーレスなSQL実行基盤であるAthenaとS3をベースにしたAWS WAFログ
 を抽出・可視化できる分析基盤を構築していこうと思います。
 
-//footnote[metrics] [https://docs.aws.amazon.com/ja_jp/waf/latest/developerguide/monitoring-cloudwatch.html]
+//footnote[metrics][https://docs.aws.amazon.com/ja_jp/waf/latest/developerguide/monitoring-cloudwatch.html]
 
 === 分析基盤は後からでも作れるので、まずは保管からだけでも?
 
@@ -62,7 +62,7 @@ S3 Selectでのファイル内走査も可能になりますし、s3に保管さ
 従量課金が発生しますので、流量が多いサービスで試す際は
 各コンポーネントの料金を確認した上で自己責任でお願い致します。
 
-===  構成全体像
+==  構成全体像
 
 全体像が見えた方が理解しやすいと思いますので、
 まず大雑把な全体像を図示します。
@@ -72,10 +72,13 @@ S3 Selectでのファイル内走査も可能になりますし、s3に保管さ
 
 大雑把に言うと以下のような処理の流れになります。
 
-1. AWS WAFの標準機能(要設定)でfirehoseにデータを出力
-2. firehoseからs3にデータを転送(データ変換をする場合はlambdaに転送)
-3. GlueCrawlerから対象s3Bucketを定期的にクロールしてAthenaで使うGlue データカタログを作成/更新
-4. AthenaでSQL実行 & QuickSightで可視化
+* 1. AWS WAFの標準機能(要設定)でfirehoseにデータを出力
+
+* 2. firehoseからs3にデータを転送(データ変換をする場合はlambdaに転送)
+
+* 3. GlueCrawlerから対象s3Bucketを定期的にクロールしてAthenaで使うGlue データカタログを作成/更新
+
+* 4. AthenaでSQL実行 & QuickSightで可視化
 
 図上は省略していますが、lambdaのエラーによるデータ欠損・その他障害に対しての保険として
 originalログをs3に保管しても良いと思います。(お好みで)
@@ -92,11 +95,17 @@ S3に吐き出す事が可能ですので、まずはログの保管の設定を
 
 
 * 保存用のbucketの作成
+
 * データ出力用のストリームを作成します。コンソールからKinesisの画面を開き、DataFirehoseの一覧画面からCreate delivery streamを選択します。
+
 * 名前を入力して、次の画面に進んでください。(注意として、AWS WAFのログ出力先となるストリームはaws-waf-logsから始まる名前である必要があります)
+
 * Process recordsはlambdaの使用やformatを変更しない場合特に設定不要なので、そのまま進みます。
+
 * 作成したsa3Bucketをdestinationに入力し次の画面に進みます。
+
 * compressionにGZIPを選択しIAM roleの項目にあるCreate new or chooseからIAMロール作成画面に進みIAMロールを作成します。
+
 * review画面で設定内容を確認し、作成を完了します。
 
 上記で設定が完了します。
@@ -104,6 +113,7 @@ S3に吐き出す事が可能ですので、まずはログの保管の設定を
 === 2. AWS WAFのページからログを吐き出したいACLを選択し、LoggingのタブからEnableLoggingをクリック
 
 * 作成したKinesis firehose を選択してください。
+
 * ログ保存時にマスクするデータを選択可能なので、マスクしたい情報を追加します。
 
 //image[kinesis_2][]{
@@ -126,7 +136,6 @@ S3に吐き出す事が可能ですので、まずはログの保管の設定を
 以下はterraformで定義する場合のサンプルコードとなります。
 
 //listnum[][terraformによるAWS WAFとログ出力〜保存のサンプル][java]{
-```
 ## waf config
 resource "aws_wafregional_web_acl" "sample_alb_acl" {
   name = "sample-alb-web-acl"
@@ -217,7 +226,8 @@ resource "aws_s3_bucket" "sample_waf_log_bucket" {
 ## firehose config
 
 resource "aws_kinesis_firehose_delivery_stream" "sample_aws_waf_log" {
-  name        = "aws-waf-logs-delivery-stream" # aws-waf-logs-で名前を始める必要がある
+# aws-waf-logs-で名前を始める必要がある
+  name        = "aws-waf-logs-delivery-stream" 
   destination = "s3"
 
   s3_configuration {
@@ -250,13 +260,22 @@ Glue Crawlerはs3 Bucketを指定するだけでS3内部のデータとディレ
 AWSコンソール上でクローラを追加します。
 
 * クローラ一覧からクローラを追加を選択
+
 * クローラの名前を入力
+
 * Data storesを選択
+
 * S3を選択し、AWS WAF のログが格納されているs3パスを入力
+
 * 別のデータストアの追加にいいえを選択
+
 * IAMを作成を選択し名前を入力。
+
 * オンデマンドで実行を選択
-* 出力先のデータソースを入力、設定オプションで新規列のみ追加、データカタログからテーブルとパーティションを削除、を選択。
+
+* 出力先のデータソースを入力、設定オプションで新規列のみ追加。
+
+* データカタログからテーブルとパーティションを削除、を選択。
 
 以上でクローラーが作成されます。
 
@@ -265,7 +284,6 @@ AWSコンソール上でクローラを追加します。
 terraformで設定する場合は以下の通りです。
 
 //listnum[][terraformでのGlue設定サンプル][java]{
-```
 resource "aws_glue_catalog_database" "waf_log" {
   name         = "sample-waflog-db"
 }
@@ -278,8 +296,9 @@ resource "aws_glue_crawler" "waf_log_crawler" {
   schema_change_policy = {
    delete_behavior = "DELETE_FROM_DATABASE"
   }
+  #ログ保管先のbucketを指定 
   s3_target {
-    path = "s3://${aws_s3_bucket.waf_log_bucket.bucket}" #ログ保管先のbucketを指定 
+    path = "s3://${aws_s3_bucket.waf_log_bucket.bucket}" 
   }
 }
 
@@ -343,7 +362,7 @@ s3上の全データの捜査になる為、コストアップ&検索速度が�
 クエリの活用例などについてもAWS公式@<fn>{sample_queries}に例がありますので、こちらも参考までに
 確認してみてください :)
 
-//footnote[sample_queries] [https://docs.aws.amazon.com/ja_jp/athena/latest/ug/waf-logs.html]
+//footnote[sample_queries][https://docs.aws.amazon.com/ja_jp/athena/latest/ug/waf-logs.html]
 
 == ログの可視化
 
@@ -356,8 +375,11 @@ quicksightを使って簡単なグラフ化をしてみましょう。
 //footnote[quicksight_cost][https://aws.amazon.com/jp/quicksight/pricing/]
 
 * Quicksightを開く
+
 * 新しい分析を選択
+
 * 新しいデータセットを選択
+
 * データソースにAthenaを選択
 
 //image[quicksight_1][]{
