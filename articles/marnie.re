@@ -22,7 +22,7 @@ AWSWAFのRuleとConditionはデフォルトでは空になっていますので�
 マーケットプレイスでセキュリティベンダーが提供するマネージドルール@<fn>{managed_rules}を購入して適用などを行なって
 セキュリティ対策をしていく事になります。
 
-* 今回の記事ではAWS WAFのログを可視化にする仕組みを構築する事が主題となりますので、
+今回の記事ではAWS WAFのログを可視化にする仕組みを構築する事が主題となりますので、
 詳細なルール構築などについては割愛しています。
 
 //footnote[managed_rules][https://aws.amazon.com/marketplace/search/results?x=0&y=0&searchTerms=waf]
@@ -70,13 +70,13 @@ S3 Selectでのファイル内走査も可能になりますし、s3に保管さ
 
 大雑把に言うと以下のような処理の流れになります。
 
-* 1. AWS WAFの標準機能(要設定)でfirehoseにデータを出力
+ * 1. AWS WAFの標準機能(要設定)でfirehoseにデータを出力
 
-* 2. firehoseからs3にデータを転送(データ変換をする場合はlambdaに転送)
+ * 2. firehoseからs3にデータを転送(データ変換をする場合はlambdaに転送)
 
-* 3. GlueCrawlerから対象s3Bucketを定期的にクロールしてAthenaで使うGlue データカタログを作成/更新
+ * 3. GlueCrawlerから対象s3Bucketを定期的にクロールしてAthenaで使うGlue データカタログを作成/更新
 
-* 4. AthenaでSQL実行 & QuickSightで可視化
+ * 4. AthenaでSQL実行 & QuickSightで可視化
 
 図上は省略していますが、lambdaのエラーによるデータ欠損・その他障害に対しての保険として
 originalログをs3に保管しても良いと思います。(お好みで)
@@ -94,27 +94,27 @@ S3に吐き出す事が可能ですので、まずはログの保管の設定を
 === 1. ログ保存用のS3BucketとkinesisFirehoseに処理用のストリームをあらかじめ作成します。
 
 
-* 保存用のbucketを作成します。
+ * 保存用のbucketを作成します。
 
-* データ出力用のストリームを作成します。コンソールからKinesisの画面を開き、DataFirehoseの一覧画面からCreate delivery streamを選択します。
+ * データ出力用のストリームを作成します。コンソールからKinesisの画面を開き、DataFirehoseの一覧画面からCreate delivery streamを選択します。
 
-* 名前を入力して、次の画面に進んでください。(注意として、AWS WAFのログ出力先となるストリームはaws-waf-logsから始まる名前である必要があります)
+ * 名前を入力して、次の画面に進んでください。(注意として、AWS WAFのログ出力先となるストリームはaws-waf-logsから始まる名前である必要があります)
 
-* Process recordsはlambdaの使用やformatを変更しない場合特に設定不要なので、そのまま進みます。
+ * Process recordsはlambdaの使用やformatを変更しない場合特に設定不要なので、そのまま進みます。
 
-* 作成したsa3Bucketをdestinationに入力し次の画面に進みます。
+ * 作成したsa3Bucketをdestinationに入力し次の画面に進みます。
 
-* compressionにGZIPを選択しIAM roleの項目にあるCreate new or chooseからIAMロール作成画面に進みIAMロールを作成します。
+ * compressionにGZIPを選択しIAM roleの項目にあるCreate new or chooseからIAMロール作成画面に進みIAMロールを作成します。
 
-* review画面で設定内容を確認し、作成を完了します。
+ * review画面で設定内容を確認し、作成を完了します。
 
 上記で設定が完了します。
 
 === 2. AWS WAFのページからログを吐き出したいACLを選択し、LoggingのタブからEnableLoggingをクリック
 
-* 作成したKinesis firehose を選択してください。
+ * 作成したKinesis firehose を選択してください。
 
-* ログ保存時にマスクするデータを選択可能なので、マスクしたい情報を追加します。
+ * ログ保存時にマスクするデータを選択可能なので、マスクしたい情報を追加します。
 
 //image[kinesis_2][]{
 //}
@@ -255,23 +255,23 @@ Glue Crawlerはs3 Bucketを指定するだけでS3内部のデータとディレ
 
 AWSコンソール上でクローラを追加します。
 
-* クローラ一覧からクローラを追加を選択
+ * クローラ一覧からクローラを追加を選択
 
-* クローラの名前を入力
+ * クローラの名前を入力
 
-* Data storesを選択
+ * Data storesを選択
 
-* S3を選択し、AWS WAF のログが格納されているs3パスを入力
+ * S3を選択し、AWS WAF のログが格納されているs3パスを入力
 
-* 別のデータストアの追加にいいえを選択
+ * 別のデータストアの追加にいいえを選択
 
-* IAMを作成を選択し名前を入力。
+ * IAMを作成を選択し名前を入力。
 
-* オンデマンドで実行を選択
+ * オンデマンドで実行を選択
 
-* 出力先のデータソースを入力、設定オプションで新規列のみ追加。
+ * 出力先のデータソースを入力、設定オプションで新規列のみ追加。
 
-* データカタログからテーブルとパーティションを削除、を選択。
+ * データカタログからテーブルとパーティションを削除、を選択。
 
 以上でクローラーが作成されます。
 
@@ -370,38 +370,38 @@ quicksightを使って簡単なグラフ化をしてみましょう。
 
 //footnote[quicksight_cost][https://aws.amazon.com/jp/quicksight/pricing/]
 
-* Quicksightを開く
+ * Quicksightを開く
 
-* 新しい分析を選択
+ * 新しい分析を選択
 
-* 新しいデータセットを選択
+ * 新しいデータセットを選択
 
-* データソースにAthenaを選択
+ * データソースにAthenaを選択
 
 //image[quicksight_1][]{
 //}
 
-* 適当な名前をつけて作成
+ * 適当な名前をつけて作成
 
 //image[quicksight_2][]{
 //}
 
-* 分析したいAthenaのテーブルを選択し、カスタムSQLを使用をクリック
+ * 分析したいAthenaのテーブルを選択し、カスタムSQLを使用をクリック
 
 //image[quicksight_3][]{
 //}
 
-* 例として国別にリクエストの集計を取る簡単なSQLを入力し、クエリの確認をクリック
+ * 例として国別にリクエストの集計を取る簡単なSQLを入力し、クエリの確認をクリック
 
 //image[quicksight_4][]{
 //}
 
-* データセットの作成が完了しました。
+ * データセットの作成が完了しました。
 
 //image[quicksight_5][]{
 //}
 
-* Visualizeを選択して、画面左から円グラフを選択。フィールドウェルのグループにcountry、値にcountをドラッグします。
+ * Visualizeを選択して、画面左から円グラフを選択。フィールドウェルのグループにcountry、値にcountをドラッグします。
 
 //image[quicksight_6][]{
 //}
