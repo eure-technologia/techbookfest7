@@ -66,9 +66,46 @@ ClojureはLispの同じ独特な文法（S式）を採用しているLisp方言�
 
 HugSQLはClojureからMySQL/PostgreSQLなどのRelational DatabaseへSQLを発行するためのヘルパーライブラリです。
 
-各種DBへの接続にJDBC(Java Database Connectivity)@<fn>{jdbc}を利用するため、対応する
+=== HugSQLの特徴とそのメリット/デメリット
+
+このライブラリのもっとも特徴的な点はSQL文の記述方法で、SQL文を組み立てるためにClojureで書かれた専用のDSLなどを使うことはありません。
+以下のような別ファイルとして配置した.sqlファイルを読み込んで実行します。
+
+//emlist[HugSQLが読み込む.sqlファイルの例][sql]{
+-- :name insert-image :i! :n
+-- :doc Imageを追加
+insert into image (url)
+values (:url)
+
+-- :name update-image-by-id :! :1
+-- :doc Imageの更新
+update image
+set id = :id
+    url = :url
+where id = :id
+//}
+
+このSQLの記述方法はもともと、Kris Jenkins氏によって作られたYesql(https://github.com/krisajenkins/yesql)をインスパイアして採用されたものですが、Yesqlはすでに開発が停止されているために実質的にはこの特徴を持つライブラリはHugSQLのみが選択肢になります。@<fn>{yesql}
+
+YesqlのREADME@<fn>{yesql_rationale}によれば、DSLを用いずにSQLを分けることには以下のメリットがあると述べられています。
+
+- DSLを挟むことによる認知コストからの脱却
+- SQLへの豊富なエディタサポートによる恩恵
+- SQL解析ツールなどをそのまま使えることによる、職能を超えた相互運用性
+- EXPLAINなどの通常のSQLで使用されるパフォーマンス測定が利用可能になり、パフォーマンスチューニングが簡単化される
+- SQLファイルとしての再利用性の向上
+
+また逆にDSLを利用すべきケースについても述べられており、複数のRelational Databaseへ向けて一つの複雑なクエリを透過的に利用したい場合は抽象化のためにDSLが必要になるのだとしています。
+
+これはあくまで著者の意見ですが、Relational Databaseへの命令を素直にSQLファイルとして管理できる恩恵は無視できるものではなく、先述のデメリットを許容できない場合でない限りHugSQLは常に後悔の少ない選択肢になり得ると思います。
+
+//footnote[yesql][実際、YesqlのREADMEには開発がストップした旨とともに、HugSQLへの誘導が追記されています]
+//footnote[yesql_rationale][https://github.com/krisajenkins/yesql#rationale]
 
 == HugSQLの基本
+
+ここからは、HugSQLの実際の利用方法について順を追って解説していきます。
+
 === DBへの接続
 === SQLファイルの記述
 === SQLの実行
