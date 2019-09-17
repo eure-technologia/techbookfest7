@@ -17,12 +17,12 @@ review_version: 3.0
 # inherit: ["A.yml", "B.yml"]
 
 # ブック名(ファイル名になるもの。ASCII範囲の文字を使用)
-bookname: technologies
+bookname: eure-technologia-vol4
 # 記述言語。省略した場合はja
 language: ja
 
 # 書名
-booktitle: futaboooを支える技術
+booktitle: エウレ・テクノロギア vol.4
 
 # 著者名。「, 」で区切って複数指定できる
 aut: ["エウレ・テクノロギア編"]
