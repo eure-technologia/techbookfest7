@@ -8,4 +8,4 @@
 
 # for Linux
 docker build -t boxp/review .
-docker run -t --rm -v $(pwd):/book vvakame/review:3.1 /bin/bash -ci "cd /book && ./setup.sh && REVIEW_CONFIG_FILE=$REVIEW_CONFIG_FILE npm run pdf"
+docker run -t --rm -v $(pwd):/book boxp/review /bin/bash -ci "cd /book && ./setup.sh && REVIEW_CONFIG_FILE=$REVIEW_CONFIG_FILE npm run pdf"
