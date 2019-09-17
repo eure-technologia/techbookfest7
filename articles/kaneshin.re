@@ -105,8 +105,8 @@ func BenchmarkRegexpMustCompile2(b *testing.B) {
 
 //cmd{
 $ go test -bench . -benchmem
-BenchmarkRegexpMustCompile1-16            495222              2413 ns/op            1618 B/op         23 allocs/op
-BenchmarkRegexpMustCompile2-16            838984              1391 ns/op             289 B/op          9 allocs/op
+BenchmarkRegexpMustCompile1-16 495222 2413 ns/op 1618 B/op 23 allocs/op
+BenchmarkRegexpMustCompile2-16 838984 1391 ns/op  289 B/op  9 allocs/op
 //}
 
 これは@<code>{regexp}を関数呼び出し時に生成するか、実行時に変数を初期化してしまうかをシミュレートしたベンチマークです。結果は実行時に初期化する方が2倍高速に処理ができます。このように@<code>{regexp}は正規表現が動的に変化しない場合はパッケージスコープの変数として宣言してしまうことで効率的に処理ができます。
