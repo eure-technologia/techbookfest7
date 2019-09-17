@@ -36,8 +36,11 @@ ClojureはJVM/JavaScipt/.NET上で動作するマルチプラットフォーム�
 
 Clojureは動的型付けの言語で、静的型付け言語のようにコンパイル時に型の整合性をチェックするような仕組みはありません。
 
-しかし、TypeScriptなどと同様に漸進的型付けによる型チェックを行うための公式ライブラリであるcore.typed（https://github.com/clojure/core.typed）が存在するほか、
-最近では動的にバリデーションを行う宣言的な仕様（spec）を書いてチェックさせるcore.spec（https://github.com/clojure/core.specs.alpha）などがよく利用されています。
+しかし、TypeScriptなどと同様に漸進的型付けによる型チェックを行うための公式ライブラリであるcore.typed@<fn>{core_typed}が存在するほか、
+最近では動的にバリデーションを行う宣言的な仕様（spec）を書いてチェックさせるcore.spec@<fn>{core_spec}などがよく利用されています。
+
+//footnote[core_typed][https://github.com/clojure/core.typed]
+//footnote[core_spec][https://github.com/clojure/core.specs.alpha]
 
 === インタラクティブな開発環境
 
@@ -58,9 +61,10 @@ ClojureはLispの同じ独特な文法（S式）を採用しているLisp方言�
 このように、Clojureは関数型言語の特徴を持ちながらも柔軟で開発サイクルが早く、少人数や個人での開発にとても向いている言語だと著者は考えています。
 実際に先日著者がリリースしたサービスは開発者一人でも順当に開発を進めることができ、仕事やVRChatに明け暮れながらも最初に決めたリリース日通りにリリースさせることができました。
 
-なおこの章はライブラリの紹介を目的としているため、はじめてClojureに触れる方はこの章を読む前にClojure公式の入門ガイド（https://japan-clojurians.github.io/clojure-site-ja/guides/guides）を読んでおくことを強くおすすめ致します。
+なおこの章はライブラリの紹介を目的としているため、はじめてClojureに触れる方はこの章を読む前にClojure公式の入門ガイド@<fn>{clojure_biginner_guide}を読んでおくことを強くおすすめ致します。
 
 //footnote[merits][この特徴の説明は著者の経験に基づく主観を多く含むものです。公式な説明はこちらを参照ください https://clojure.org/about/rationale]
+//footnote[clojure_biginner_guide][https://japan-clojurians.github.io/clojure-site-ja/guides/guides]
 
 == HugSQLについて
 
@@ -85,7 +89,9 @@ set id = :id
 where id = :id
 //}
 
-このスタイルはもともと、Kris Jenkins氏によって作られたYesql（https://github.com/krisajenkins/yesql）をインスパイアして採用されたものですが、Yesqlはすでに開発が停止されているために実質的にはこの特徴を持つライブラリはHugSQLのみが選択肢になります。@<fn>{yesql}
+このスタイルはもともと、Kris Jenkins氏によって作られたYesql@<fn>{yesql}をインスパイアして採用されたものですが、Yesqlはすでに開発が停止されているために実質的にはこの特徴を持つライブラリはHugSQLのみが選択肢になります。@<fn>{yesql_readme}
+
+//footnote[yesql][https://github.com/krisajenkins/yesql]
 
 YesqlのREADME@<fn>{yesql_rationale}によれば、DSLを用いずにSQLを分けることには以下のメリットがあると述べられています。
 
@@ -99,7 +105,7 @@ YesqlのREADME@<fn>{yesql_rationale}によれば、DSLを用いずにSQLを分�
 
 これはあくまで著者の意見ですが、Relational Databaseへの命令を素直にSQLファイルとして管理できる恩恵は無視できるものではなく、先述のデメリットを許容できない場合でない限りHugSQLは常に後悔の少ない選択肢になり得ると思います。
 
-//footnote[yesql][実際、YesqlのREADMEには開発がストップした旨とともに、HugSQLへの誘導が追記されています]
+//footnote[yesql_readme][実際、YesqlのREADMEには開発がストップした旨とともに、HugSQLへの誘導が追記されています]
 //footnote[yesql_rationale][https://github.com/krisajenkins/yesql#rationale]
 
 == HugSQLの基本
@@ -116,9 +122,14 @@ YesqlのREADME@<fn>{yesql_rationale}によれば、DSLを用いずにSQLを分�
 ...
   :dependencies [
 		...
-                 [com.layerware/hugsql "0.4.9"] ;; hugsqlのライブラリ本体
-                 [mysql/mysql-connector-java "8.0.17"] ;; MySQLのドライバーライブラリ
-                 [clj-time "0.15.1"] ;; 必須ではないが、時刻データをClojureのデータ構造へ変換するために追記
+		;; hugsqlのライブラリ本体
+                 [com.layerware/hugsql "0.4.9"]
+
+ 		 ;; MySQLのドライバーライブラリ
+                 [mysql/mysql-connector-java "8.0.17"]
+
+ 		 ;; 必須ではないが、時刻データをClojureのデータ構造へ変換するために追記
+                 [clj-time "0.15.1"]
 		...
                  ]
 ...
@@ -140,11 +151,12 @@ HugSQLから実際にRelational Databaseへ操作を行うために必要なコ�
 
 //emlist[Relational Database(MySQL)への接続に必要な定義][clojure]{
 (def connection
-	{:classname "com.mysql.jdbc.Driver" ;; ロードしたいドライバのクラス名
-	 :subprotocol "mysql"
-	 :subname "//127.0.0.1:3306/my-db?connectionCollation=utf8mb4_bin" ;; データベースのホスト名,データベース名,接続文字セットの指定
-	 :user "hoge"
-	 :password "pa55w0rd"})
+  {:classname "com.mysql.jdbc.Driver" ;; ロードしたいドライバのクラス名
+   :subprotocol "mysql"
+   ;; データベースのホスト名,データベース名,接続文字セットの指定
+   :subname "//127.0.0.1:3306/my-db?connectionCollation=utf8mb4_bin"
+   :user "hoge"
+   :password "pa55w0rd"})
 //}
 
 あとはHugSQLによるSQLの実行時にこのhash-mapを渡すだけで実行されます。
@@ -223,11 +235,11 @@ SQL1行目の関数名のすぐ後ろ、@<code>{:i!}は実行するSQLの種類�
 //footnote[returning_execute][PostgreSQL限定で指定できる :returning-execute という値がありますが、この章ではMySQLを扱うため省いています。全てのコマンドを見たい場合は公式ドキュメントを参照してください https://www.hugsql.org/#command]
 
 //table[command][コマンドに指定可能な値]{
-値 省略形 説明
+値	省略形	説明
 ----------------------------
-:query :? SELECT文で使用する。この値を設定することで結果の集合を受け取ることができる（デフォルト値）
-:execute :! UPDATE・CREATE・ALTER文などで使用する。どんな文に対しても指定できる
-:insert :i! INSERT文で使用する。この値を指定することでAUTO INCREMENTが利用可能になる
+:query	:?	SELECT文で使用する。この値を設定することで結果の集合を受け取ることができる（デフォルト値）
+:execute	:!	UPDATE・CREATE・ALTER文などで使用する。どんな文に対しても指定できる
+:insert	:i!	INSERT文で使用する。この値を指定することでAUTO INCREMENTが利用可能になる
 //}
 
 また、この値を省略した場合はデフォルト値である@<code>{:query}が設定されます。
@@ -238,12 +250,12 @@ SQL1行目のコマンドのすぐ後ろ、@<code>{:n}はSQLの実行結果の�
 指定可能な値は以下の通りです。
 
 //table[result][指定可能な実行結果の種類]{
-種類 省略形 説明
+種類	省略形	説明
 ----------------------------
-:one :1 SELECT文で使用する。1行の結果だけを受け取りたい場合はこの値を指定する
-:many :* SELECT文で使用する。複数行の結果を受け取りたい時にこの値を指定する
-:affected :n INSERT・UPDATE・DELETE文などで使用する。影響を受けた行の数が結果として返るようになる
-:raw なし SQLの実行結果をそのまま返す（デフォルト）
+:one	:1	SELECT文で使用する。1行の結果だけを受け取りたい場合はこの値を指定する
+:many	:*	SELECT文で使用する。複数行の結果を受け取りたい時にこの値を指定する
+:affected	:n	INSERT・UPDATE・DELETE文などで使用する。影響を受けた行の数が結果として返るようになる
+:raw	なし	SQLの実行結果をそのまま返す（デフォルト）
 //}
 
 また、この値を省略した場合はデフォルト値の@<code>{:raw}が設定されます。
@@ -301,7 +313,8 @@ HugSQLはSQLを実際に実行する前に、渡されたパラメータとSQL�
 
 (def-sqlvec-fns "techbookfest/sql/image.sql")
 
-;; このようなsqlvecが返る→ ["insert into image (url) values (?)", "https://dummyimage.com/600x600/000/fff"]
+;; このようなsqlvecが返る↓
+;; ["insert into image (url) values (?)", "https://dummyimage.com/600x600/000/fff"]
 (insert-image-sqlvec {:url "https://dummyimage.com/600x600/000/fff"})
 //}
 
@@ -324,7 +337,10 @@ id = :id
 /*~
 (->> (-> params (dissoc :id))
      (map (fn [[key _]]
-              (str "," (identifier-param-quote (name key) options) " = :" (name key))))
+              (str ","
+                   (identifier-param-quote (name key) options)
+                   " = :"
+                   (name key))))
      (apply str))
 ~*/
 where id = :id
@@ -346,6 +362,6 @@ SQLファイルを読み込んで実行するこのようなスタイルのヘ�
 
 == 参考文献
 
-- Clojure Rationale: https://clojure.org/about/rationale
-- Clojure Wikipedia: https://ja.wikipedia.org/wiki/Clojure
-- HugSQL: https://www.hugsql.org
+* Clojure Rationale: https://clojure.org/about/rationale
+* Clojure Wikipedia: https://ja.wikipedia.org/wiki/Clojure
+* HugSQL: https://www.hugsql.org
