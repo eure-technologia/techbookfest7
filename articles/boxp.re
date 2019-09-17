@@ -108,7 +108,9 @@ YesqlのREADME@<fn>{yesql_rationale}によれば、DSLを用いずにSQLを分�
 
 まずHugSQLを利用するためには、HugSQLとHugSQLを各Relational Databaseへ接続するためのドライバーとなるライブラリを依存関係に追加する必要があります。
 
-ビルドツールとしてLeiningen@<fn>{https://leiningen.org/}を、接続するデータベースをMySQLとしている場合は以下のようにproject.cljへライブラリを追記することで利用できるでしょう。
+ビルドツールとしてLeiningen@<fn>{leiningen}を、接続するデータベースをMySQLとしている場合は以下のようにproject.cljへライブラリを追記することで利用できるでしょう。
+
+//footnote[leiningen][https://leiningen.org/]
 
 //emlist[HugSQLに必要な依存ライブラリを追加したproject.clj][clojure]{
 ...
