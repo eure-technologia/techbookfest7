@@ -174,7 +174,7 @@ $ go run main.
 @<code>{unicode}パッケージにはさまざまな文字に対応するためのUnicodeテーブル@<fn>{unicode_tables}が定義されています。
 //footnote[unicode_tables][@<href>{https://golang.org/src/unicode/tables.go}]
 
-== @<code>{init}関数
+== init関数
 
 @<code>{init}関数は実行時の初期化で呼び出される特殊な関数です。実行されるタイミングですが、パッケージの変数が初期化された後に@<code>{init}関数が実行されます。
 
@@ -208,7 +208,7 @@ Hello, world
 
 @<code>{main}パッケージに@<code>{init}関数が定義されている場合は@<code>{main}関数が実行される前に実行されます。
 
-=== 複数の@<code>{init}関数
+=== 複数のinit関数
 
 Goはパッケージスコープの仕様のため、別々のファイルに同じ関数名の関数を定義しても同じパッケージにそれぞれのファイルが存在していたらビルドは失敗します。しかし、この@<code>{init}関数は特殊な仕様でパッケージ内にいくつ定義してもビルドすることが可能です。
 
@@ -270,7 +270,7 @@ $ go run main.go
 main.init.0
 //}
 
-=== @<code>{init}関数をインポート
+=== init関数をインポート
 
 @<code>{main}パッケージ内の@<code>{init}関数ではなく、別のパッケージに@<code>{init}関数が存在している場合です。
 
@@ -311,7 +311,7 @@ init
 
 インポートされたパッケージに存在する@<code>{init}関数もしっかりと処理されて結果が表示されます。
 
-=== @<code>{init}関数の実行順序
+=== init関数の実行順序
 
 複数の@<code>{init}関数やインポートされた@<code>{init}関数の初期化（実行）順序です。
 
