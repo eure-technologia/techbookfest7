@@ -135,7 +135,7 @@ S3に吐き出す事が可能ですので、まずはログの保管の設定を
 
 以下はterraformで定義する場合のサンプルコードとなります。
 
-//listnum[][terraformによるAWS WAFとログ出力〜保存のサンプル][java]{
+//listnum[terraform_awswaf_logging][terraformによるAWS WAFとログ出力〜保存のサンプル][java]{
 ## waf config
 resource "aws_wafregional_web_acl" "sample_alb_acl" {
   name = "sample-alb-web-acl"
@@ -279,7 +279,7 @@ AWSコンソール上でクローラを追加します。
 
 terraformで設定する場合は以下の通りです。
 
-//listnum[][terraformでのGlue設定サンプル][java]{
+//listnum[terraform_glue_config][terraformでのGlue設定サンプル][java]{
 resource "aws_glue_catalog_database" "waf_log" {
   name         = "sample-waflog-db"
 }

@@ -288,7 +288,7 @@ func init() {
 
 この@<code>{example}パッケージを@<code>{main}パッケージにインポートします。
 
-//list[import_init_function][init関数のインポート][go]{
+//list[import_init_function_example_import][init関数のインポート][go]{
 package main
 
 import (
