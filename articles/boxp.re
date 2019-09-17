@@ -362,6 +362,6 @@ SQLファイルを読み込んで実行するこのようなスタイルのヘ�
 
 == 参考文献
 
-* Clojure Rationale: https://clojure.org/about/rationale
-* Clojure Wikipedia: https://ja.wikipedia.org/wiki/Clojure
-* HugSQL: https://www.hugsql.org
+ * Clojure Rationale: https://clojure.org/about/rationale
+ * Clojure Wikipedia: https://ja.wikipedia.org/wiki/Clojure
+ * HugSQL: https://www.hugsql.org
