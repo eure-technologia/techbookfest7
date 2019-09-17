@@ -1,10 +1,10 @@
 = はじめに
 
 == 本書の内容について
- * boxp.
- * kaneshin.
- * Run-time Initialization in Go
+ * Clojure meets SQL! - HugSQL入門
+ * いまさら聞けない機械学習APIの作り方 with responder
  * S3 + Athena + GlueCrawler を使ってAWS WAFのログ分析基盤を構築しよう!
+ * Run-time Initialization in Go
 
 == エウレ・テクノロギアとは
 //footnote[株式会社エウレカ][株式会社エウレカ https://eure.jp/]
