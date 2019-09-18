@@ -91,7 +91,7 @@ lambdaでの変換部分は省略させていただきます。（ごめんな�
 AWS WAFログはWAFを経由した全てのログをKinesis Firehoseを経由して
 S3に吐き出す事が可能ですので、まずはログの保管の設定を行います。
 
-=== 1. ログ保存用のS3BucketとkinesisFirehoseに処理用のストリームをあらかじめ作成します。
+=== ログ保存用のS3BucketとkinesisFirehoseに処理用のストリームをあらかじめ作成します。
 
 
  * 保存用のbucketを作成します。
@@ -110,7 +110,7 @@ S3に吐き出す事が可能ですので、まずはログの保管の設定を
 
 上記で設定が完了します。
 
-=== 2. AWS WAFのページからログを吐き出したいACLを選択し、LoggingのタブからEnableLoggingをクリック
+=== AWS WAFのページからログを吐き出したいACLを選択し、LoggingのタブからEnableLoggingをクリック
 
  * 作成したKinesis firehose を選択してください。
 
@@ -119,19 +119,19 @@ S3に吐き出す事が可能ですので、まずはログの保管の設定を
 //image[kinesis_2][]{
 //}
 
-=== 3. Loggingのタブから処理を行うKinesisFirehoseを紐づける。
+=== Loggingのタブから処理を行うKinesisFirehoseを紐づける。
 
 //image[kinesis_3][]{
 //}
 
-=== 4. 完成!
+=== 完成!
 
 この状態でWAFをかぶせたALB向けに通信を行うと、以下のようにs3にログが自動で作成されていきます。
 
 //image[s3_save][]{
 //}
 
-=== 5. terraformでの設定サンプル
+=== terraformでの設定サンプル
 
 以下はterraformで定義する場合のサンプルコードとなります。
 
@@ -146,7 +146,8 @@ resource "aws_wafregional_web_acl" "sample_alb_acl" {
   }
 
   logging_configuration {
-    log_destination = "${aws_kinesis_firehose_delivery_stream.sample_waf_log.arn}"
+    log_destination =
+            "${aws_kinesis_firehose_delivery_stream.sample_waf_log.arn}"
     # tokenなどセキュリティ上、保管したくない値を定義するとmaskして保存してくれる
     redacted_fields {
       field_to_match {
